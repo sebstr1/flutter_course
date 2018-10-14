@@ -55,9 +55,52 @@ class ProductsPage extends StatelessWidget {
 
 -----
 
+## Tabs
+
+> The Pages returned from the Tabview does not need its own scaffold since they are only sub-pages.
+
+  Widget build(BuildContext context) {
+    appBar: AppBar(
+          title: Text('Manage Products'),
+          bottom: TabBar(
+            tabs: <Widget>[
+              Tab(
+                text: 'Create Product',
+                icon: Icon(Icons.create),
+              ),
+              Tab(text: 'My Products', icon: Icon(Icons.list)),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: <Widget>[ProductCreatePage(), ProductListPage()],
+        ),
+      ),
+    );
+  }
+
+  -----
+
+  ## Named Routes
+  
+> Create the registry in main.dart
+
+'/' is a Special route that serves as home route.
+
+-       routes: {
+        '/': (BuildContext context) => ProductsPage(),
+        '/admin': (BuildContext context) => ProductsAdminPage(),
+      },
+
+> Navigate to it by pushNamed or pushReplacementNamed
+- Navigator.pushNamed(context, '/admin');
+
+
+>- ### Named routes is probably preffere over below solutions.
 - Navigate to with back navigation -> Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => ProductPage()))
 - Navigate to without possibility to back -> Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context) => ProductsPage()))
 - Navigate back -> Navigator.pop(context)
+
 
 >**Listen for The Result Of The Navigation**
 
@@ -74,6 +117,14 @@ class ProductsPage extends StatelessWidget {
 > Navigator.push<returntype>(.....)**.then((Type returnedValue) = {
   .. Execute stuff.
 }
+
+### Unknown route // 404 page? (main.dart)
+
+onUnknownRoute: (RouteSettings settings) {
+        return MaterialPageRoute(
+          builder: (BuildContext context) => ProductsPage(_products, _addProduct, _deleteProduct)
+        );
+      },
 
 # Rendering Lists
 
