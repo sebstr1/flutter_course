@@ -2,7 +2,9 @@
 
 Notes taken from the course
 
-## Getting Started
+## Layout
+
+Getting the device width; final double deviceWidth = MediaQuery.of(context).size.width;
 
 Align Vertically -- mainAxisAlignment: MainAxisAlignment.center
 Align Horizontally -- crossAxisAlignment: CrossAxisAlignment.center
@@ -21,6 +23,21 @@ Container -- Can set height manually
 Expanded -- Sort of like container but takes up the rest of the screen height. (Dynamic)
 
 ListView.builder -- Best way to render unknown sized list - Loads when needed, destroys when out of screen.
+
+Listview always take the full availanble space left on screen.
+
+#### Touch Events
+
+Wrap any element in a GestureDetector
+
+GestureDetector(
+  onTap: _submitForm,
+  child: Container(
+      color: Colors.green,
+      padding: EdgeInsets.all(5.0),
+      child: Text('MyButton')),
+)
+
 
 ##### Navigation
 

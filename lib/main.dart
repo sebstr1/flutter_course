@@ -45,6 +45,7 @@ class _MyAppState extends State<MyApp> {
         brightness: Brightness.light,
         primarySwatch: Colors.teal,
         accentColor: Colors.deepPurpleAccent,
+        buttonColor: Colors.deepPurpleAccent,
         // fontFamily: 'Oswald' sets the font for entire app.
       ),
       // home: AuthPage(),
