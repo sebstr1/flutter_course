@@ -1,6 +1,55 @@
 # flutter_course Notes
 
 Notes taken from the course
+-----
+
+## Misc
+
+How to use regexp, (Chek if a number in string): RegExp(r'^(?:[1-9]\d*|0)?(?:\.\d+)?$').hasMatch(value)
+
+Please note that our validation right now only accepts dots (. ) as a decimal separator. This regex pattern could look like this to also allow for commas:
+
+RegExp(r'^(?:[1-9]\d*|0)?(?:[.,]\d+)?$') 
+
+The submission of the form would fail then though since a value like 9,99  can't be parsed into a double. Since this is a valid decimal number in Europe, we should be able to handle this of course. 
+
+Hence you want to ensure that when saving the value, you're swapping any commas for dots: 
+
+_formData['price'] = double.parse(value.replaceFirst(RegExp(r','), '.')) 
+
+
+For email address validation, you can use this RegEx: 
+
+RegExp(r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")
+
+## Forms
+final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+The validator should **return nothing** if the validation is successful.
+
+TextFormField(
+        decoration: InputDecoration(labelText: 'Product Title'),
+        validator: (String value) {
+          // if (value.trim().length <= 0) {
+          if (value.isEmpty) {
+            return 'Title is required';
+          }          
+        },
+        onSaved: (String value) {
+          setState(() {
+            _titleValue = value;
+          });
+        });
+  }
+
+## Focus
+
+Taking focus priority over a textinput will close the keyboard for example.
+
+GestureDetector(
+      onTap: () {
+        FocusScope.of(context).requestFocus(FocusNode()); // FocusNode() is just an empty node.
+      },
 
 ## Layout
 
