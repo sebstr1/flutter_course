@@ -42,7 +42,7 @@ class ProductPage extends StatelessWidget {
         return Future.value(false);
       },
       child: ScopedModelDescendant<MainModel>(builder: (BuildContext context, Widget child, MainModel model) {
-        final Product product = model.products[productIndex];
+        final Product product = model.allProducts[productIndex];
         return Scaffold(
         appBar: AppBar(
           title: Text(product.title),
