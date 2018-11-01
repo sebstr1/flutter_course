@@ -3,6 +3,7 @@ import 'package:scoped_model/scoped_model.dart';
 
 import '../widgets/products/products.dart';
 import '../scoped-models/main.dart';
+import '../widgets/ui_elements/logout_list_tile.dart';
 
 class ProductsPage extends StatefulWidget {
   final MainModel model;
@@ -16,14 +17,12 @@ class ProductsPage extends StatefulWidget {
 }
 
 class _ProductsPageState extends State<ProductsPage> {
-
   @override
   initState() {
     super.initState();
     widget.model.fetchProducts();
   }
 
- 
   Widget _buildSideDrawer(BuildContext context) {
     return Drawer(
       child: Column(
@@ -38,7 +37,9 @@ class _ProductsPageState extends State<ProductsPage> {
             onTap: () {
               Navigator.pushReplacementNamed(context, '/admin');
             },
-          )
+          ),
+          Divider(),
+          LogoutListTile(),
         ],
       ),
     );
@@ -57,27 +58,28 @@ class _ProductsPageState extends State<ProductsPage> {
       },
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: _buildSideDrawer(context),
-      appBar: AppBar(
-        title: Text('EasyList'),
-        actions: <Widget>[
-          ScopedModelDescendant<MainModel>(
-            builder: (BuildContext context, Widget child, MainModel model) {
-              return IconButton(
-                icon: Icon(model.displayFavoritesOnly ? Icons.favorite : Icons.favorite_border),
-                onPressed: () {
-                  model.toggleDisplayMode();
-                },
-              );
-            },
-          )
-        ],
-      ),
-      body: _buildProductsList()
-    );
+        drawer: _buildSideDrawer(context),
+        appBar: AppBar(
+          title: Text('EasyList'),
+          actions: <Widget>[
+            ScopedModelDescendant<MainModel>(
+              builder: (BuildContext context, Widget child, MainModel model) {
+                return IconButton(
+                  icon: Icon(model.displayFavoritesOnly
+                      ? Icons.favorite
+                      : Icons.favorite_border),
+                  onPressed: () {
+                    model.toggleDisplayMode();
+                  },
+                );
+              },
+            )
+          ],
+        ),
+        body: _buildProductsList());
   }
 }

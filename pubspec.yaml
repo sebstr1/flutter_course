@@ -10,6 +10,7 @@ dependencies:
   cupertino_icons: ^0.1.0
   scoped_model: ^0.3.0
   http: ^0.11.3+17
+  shared_preferences: ^0.4.3
 
 dev_dependencies:
   flutter_test:
