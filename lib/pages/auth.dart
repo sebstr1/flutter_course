@@ -123,7 +123,7 @@ class _AuthPageState extends State<AuthPage> {
     
 
     if (result['success']) {
-      Navigator.pushReplacementNamed(context, '/products');
+      // Navigator.pushReplacementNamed(context, '/products');
     } else {
       showDialog(
         context: context,

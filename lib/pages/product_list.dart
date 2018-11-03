@@ -21,7 +21,7 @@ class _ProductListPageState extends State<ProductListPage> {
   @override
   initState() {
     super.initState();
-    widget.model.fetchProducts();
+    widget.model.fetchProducts(onlyForUser: true);
   }
 
   Widget _buildEditButton(

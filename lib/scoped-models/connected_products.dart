@@ -1,8 +1,9 @@
+import 'dart:convert';
+import 'dart:async';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:http/http.dart' as http; // we give this package a name.
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
-import 'dart:async';
+import 'package:rxdart/subjects.dart';
 
 import '../models/product.dart';
 import '../models/user.dart';
@@ -153,7 +154,7 @@ class ProductsModel extends ConnectedProductsModel {
     });
   }
 
-  Future<Null> fetchProducts() {
+  Future<Null> fetchProducts({onlyForUser = false}) {
     _isLoading = true;
     notifyListeners();
     return http
@@ -175,11 +176,15 @@ class ProductsModel extends ConnectedProductsModel {
             image: productdata['image'],
             price: productdata['price'],
             userEmail: productdata['userEmail'],
-            userId: productdata['userId']);
+            userId: productdata['userId'],
+            isFavorite: productdata['wishListUsers'] == null ? false : (productdata['wishListUsers'] as Map<String, bool>)
+                .containsKey(_authenticatedUser.id));
         fetchedProductList.add(product);
       });
+      _products = onlyForUser ? fetchedProductList.where((Product product) {
+        return product.userId == _authenticatedUser.id;
+      }).toList() : fetchedProductList;
       _isLoading = false;
-      _products = fetchedProductList;
       notifyListeners();
       _selProductId = null;
     }).catchError((error) {
@@ -194,9 +199,10 @@ class ProductsModel extends ConnectedProductsModel {
     notifyListeners(); // To rebuild the part wrapped by ScopedModelDescendant
   }
 
-  void toggleProductFavoriteStatus() {
+  void toggleProductFavoriteStatus() async {
     final bool isCurrentlyFavorite = selectedProduct.isFavorite;
     final bool newFavoriteStatus = !isCurrentlyFavorite;
+
     final Product updatedProduct = Product(
         id: selectedProduct.id,
         title: selectedProduct.title,
@@ -208,7 +214,33 @@ class ProductsModel extends ConnectedProductsModel {
         isFavorite: newFavoriteStatus);
 
     _products[selectedProductIndex] = updatedProduct;
-    notifyListeners(); // To rebuild the part wrapped by ScopedModelDescendant (Since we changed data (favorite status))
+
+    http.Response response;
+
+    if (newFavoriteStatus) {
+      response = await http.put(
+          'https://fluttercourse-5f5ba.firebaseio.com/products/${selectedProduct.id}/wishlistUsers/${_authenticatedUser.id}.json?auth=${_authenticatedUser.token}',
+          body: json.encode(true));
+    } else {
+      response = await http.delete(
+          'https://fluttercourse-5f5ba.firebaseio.com/products/${selectedProduct.id}/wishlistUsers/${_authenticatedUser.id}.json?auth=${_authenticatedUser.token}');
+    }
+
+    //error handeling
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      final Product updatedProduct = Product(
+          id: selectedProduct.id,
+          title: selectedProduct.title,
+          description: selectedProduct.description,
+          image: selectedProduct.image,
+          price: selectedProduct.price,
+          userEmail: selectedProduct.userEmail,
+          userId: selectedProduct.userId,
+          isFavorite: !newFavoriteStatus);
+
+      _products[selectedProductIndex] = updatedProduct;
+      notifyListeners();
+    }
   }
 
   void toggleDisplayMode() {
@@ -218,11 +250,15 @@ class ProductsModel extends ConnectedProductsModel {
 }
 
 class UserModel extends ConnectedProductsModel {
-
   Timer _authTimer;
+  PublishSubject<bool> _userSubject = PublishSubject();
 
   User get user {
     return _authenticatedUser;
+  }
+
+  PublishSubject<bool> get userSubject {
+    return _userSubject;
   }
 
   Future<Map<String, dynamic>> authenticate(String email, String password,
@@ -261,9 +297,11 @@ class UserModel extends ConnectedProductsModel {
           email: email,
           token: responseData['idToken']);
       setAuthTimeout(int.parse(responseData['expiresIn']));
+      _userSubject.add(true);
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final DateTime now = DateTime.now();
-      final DateTime expiryTime = now.add(Duration(seconds: int.parse(responseData['expiresIn'])));
+      final DateTime expiryTime =
+          now.add(Duration(seconds: int.parse(responseData['expiresIn'])));
       prefs.setString('token', responseData['idToken']);
       prefs.setString('userEmail', email);
       prefs.setString('userId', responseData['localId']);
@@ -286,24 +324,26 @@ class UserModel extends ConnectedProductsModel {
     final String expiryTimeString = prefs.getString('expiryTime');
     if (token != null) {
       final DateTime now = DateTime.now();
-    final parsedExpiryTime = DateTime.parse(expiryTimeString);
-    if (parsedExpiryTime.isBefore(now)) {
-      _authenticatedUser = null;
-      notifyListeners();
-      return;
-    }
+      final parsedExpiryTime = DateTime.parse(expiryTimeString);
+      if (parsedExpiryTime.isBefore(now)) {
+        _authenticatedUser = null;
+        notifyListeners();
+        return;
+      }
       final String userEmail = prefs.getString('userEmail');
       final String userId = prefs.getString('userId');
       final int tokenLifeSpan = parsedExpiryTime.difference(now).inSeconds;
       _authenticatedUser = User(id: userId, email: userEmail, token: token);
+      _userSubject.add(true);
       setAuthTimeout(tokenLifeSpan);
       notifyListeners();
     }
   }
 
-  void logout () async {
+  void logout() async {
     _authenticatedUser = null;
     _authTimer.cancel();
+    _userSubject.add(false);
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     // prefs.clear();
     prefs.remove('token');
@@ -311,8 +351,8 @@ class UserModel extends ConnectedProductsModel {
     prefs.remove('userId');
   }
 
-  void setAuthTimeout (int time) {
-   _authTimer = Timer(Duration(seconds: time), logout);
+  void setAuthTimeout(int time) {
+    _authTimer = Timer(Duration(seconds: time), logout);
   }
 }
 
